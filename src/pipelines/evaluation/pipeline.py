@@ -1,4 +1,4 @@
-"""evaluation: train_artifact + dataset_split[test] -> metrics -> report
+"""evaluation: train_artifact + dataset_split[test] -> final_metrics -> evaluation_report
 
 Отдельного inference нет: perplexity считается из loss прямо в прямом проходе,
 промежуточные предсказания (логиты) сохранять незачем.
@@ -24,17 +24,18 @@ def create_pipeline(**kwargs) -> Pipeline:
                 "params:training",
                 "params:split",
             ],
-            outputs="metrics",
+            outputs="final_metrics",
             name="evaluate",
             tags=["evaluation", "gpu"],
         ),
         node(
             build_report_node,
             inputs=[
-                "train_artifact",
-                "metrics",
+                "manifest",
+                "final_metrics",
+                "params:reporting",
             ],
-            outputs="report_html",
+            outputs="evaluation_report",
             name="build_report",
             tags=["evaluation", "report"],
         ),

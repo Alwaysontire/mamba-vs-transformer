@@ -1,8 +1,4 @@
 # Глобальные значения
-#
-# run_name переопределяется в conf/<env>/globals.yml (mamba / transformer).
-# Пути, зависящие от run_name, собираются в catalog.yml: base-globals резолвятся
-# до слияния с env, поэтому ${run_name} здесь всегда брал бы значение из base.
 
 run_name: ${runenv:RUN_NAME, test_training}
 owner: ${runenv:RUN_OWNER, local}

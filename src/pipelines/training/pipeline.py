@@ -19,10 +19,9 @@ def create_pipeline(**kwargs) -> Pipeline:
                 "params:training",
                 "params:split",
                 "params:run",
-                "params:mlflow",
                 "params:paths",
             ],
-            outputs="train_artifact",
+            outputs=["train_artifact", "manifest"],
             name="train",
             tags=["train", "gpu"],
         )

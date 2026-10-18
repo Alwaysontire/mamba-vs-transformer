@@ -2,7 +2,6 @@
 
 
 from __future__ import annotations
-import os
 from typing import Any, Literal, Annotated, get_args
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 
@@ -24,23 +23,6 @@ class PathsConfig(_StrictModel):
     train_dir: str = "data/train"
     predictions_dir: str = "data/predictions"
     metrics_dir: str = "data/metrics"
-
-class MLflowConfig(_StrictModel):
-    """Настройки логгирование эксперимента на MLflow"""
-
-    enabled: bool = True
-    experiment_name: str
-    tracking_url: str = "sqlite:///mlflow.db"
-    artifact_mode: Literal["minimal", "full"] = "minimal"
-
-    @model_validator(mode="after")
-    def __apply_env_override(self) -> MLflowConfig:
-        """Переопределить trackin_url из переменной окружения"""
-
-        env_url = os.environ.get("MLFLOW_TRACKING_URL")
-        if env_url:
-            object.__setattr__(self, "tracking_url", env_url)
-        return self
 
 SplitName = Literal["train", "validation", "test"]
 
@@ -76,6 +58,12 @@ class HeadConfig(_StrictModel):
     input_dropout: float = 0.0
     dropout: float = 0.0
 
+class LossConfig(_StrictModel):
+    """Вид функции потерь"""
+    type: str = "ce"
+    params: dict[str, float | None] = Field(default_factory=dict)
+
+
 class ParamBudget(_StrictModel):
     """Целевое значение параметров для честного сравнения"""
     target: int = 30000000                  # 30 миллионов пока что
@@ -87,38 +75,72 @@ class _LMBase(_StrictModel):
     """Общие параметры для обеих моделей"""
 
     vocab_size: int
-    d_model: int
-    n_layers: int
-    max_length: int = 1024
+    d_model: int = Field(
+        description=(
+            "Ширина residual-потока: размер вектора токена между блоками. "
+            "Эмбеддинг: vocab_size -> d_model; каждый блок: [B, L, d_model] -> [B, L, d_model]; "
+            "LM-head: d_model -> vocab_size"
+        ),
+    )
+    n_layers: int = Field(description="Число блоков в residual-потоке")
+    max_length: int = Field(1024, description="Длина контекста в токенах")
     dropout: float = 0.0
-    tie_embeddings: bool = True
+    tie_embeddings: bool = Field(True, description="LM-head использует веса эмбеддинга")
+
+class TransformerBlockConfig(_StrictModel):
+    """Параметры блока трансформера (attention + MLP); вход и выход блока — d_model модели"""
+
+    n_heads: int = Field(description="Число голов attention; размер головы = d_model / n_heads")
+    d_ff: int | None = Field(
+        None, description="Скрытая ширина MLP; None -> 4 * d_model (для swiglu 8/3 * d_model)"
+    )
+    norm: Literal["layernorm", "rmsnorm"] = "rmsnorm"
+    activation: Literal["gelu", "swiglu", "relu"] = "swiglu"
+    attn_implementation: Literal["eager", "sdpa"] = "sdpa"
+
 
 class TransformerConfig(_LMBase):
     """Параметры трансформера"""
 
     arch: Literal["transformer"]
-    n_heads: int
-    d_ff: int | None = None
     pos_encoding: Literal["rope", "learned", "alibi"] = "rope"
-    norm: Literal["layernorm", "rmsnorm"] = "rmsnorm"
-    activation: Literal["gelu", "swiglu", "relu"] = "swiglu"
-    attn_implementation: Literal["eager", "sdpa"] = "sdpa"
+    block: TransformerBlockConfig
 
     @model_validator(mode="after")
     def _check_heads(self) -> "TransformerConfig":
-        if self.d_model % self.n_heads: 
-            raise ValueError(f"ЮРИЙ ПРОВЕРЬ d_model={self.d_model} не делится на n_heads={self.n_heads}")
+        if self.d_model % self.block.n_heads:
+            raise ValueError(f"ЮРИЙ ПРОВЕРЬ d_model={self.d_model} не делится на n_heads={self.block.n_heads}")
         return self
 
+class MambaBlockConfig(_StrictModel):
+    """Параметры Mamba2-блока; вход и выход блока — d_model модели"""
+
+    d_state: int = Field(64, description="Размер скрытого состояния SSM на голову")
+    d_conv: int = Field(4, description="Ширина causal conv1d перед SSM")
+    expand: int = Field(2, description="d_inner = expand * d_model — ширина внутри блока")
+    headdim: int = Field(64, description="Размер головы SSM; n_heads = d_inner / headdim")
+    ngroups: int = Field(1, description="Число групп B/C (как GQA у attention)")
+    chunk_size: int = Field(256, description="Размер чанка в ядре mamba_chunk_scan_combined")
+    dt_min: float = 0.001
+    dt_max: float = 0.1
+    conv_bias: bool = True
+    bias: bool = False
+
+
 class MambaConfig(_LMBase):
+    """Параметры Mamba2"""
+
     arch: Literal["mamba"]
-    version: Literal[1, 2] = 2
-    d_state: int = 16
-    d_conv: int = 4
-    expand: int = 2
-    headdim: int | None = None
+    block: MambaBlockConfig = Field(default_factory=MambaBlockConfig)
 
-
+    @model_validator(mode="after")
+    def _check_heads(self) -> "MambaConfig":
+        d_inner = self.block.expand * self.d_model
+        if d_inner % self.block.headdim:
+            raise ValueError(f"d_inner={d_inner} (expand * d_model) не делится на headdim={self.block.headdim}")
+        if (d_inner // self.block.headdim) % self.block.ngroups:
+            raise ValueError(f"n_heads={d_inner // self.block.headdim} не делится на ngroups={self.block.ngroups}")
+        return self
 
 ModelConfig = Annotated[TransformerConfig | MambaConfig, Field(discriminator="arch")]
 
@@ -140,7 +162,6 @@ class ExperimentConfig(_StrictModel):
 
     run: RunConfig
     paths: PathsConfig = Field(default_factory=PathsConfig)
-    mlflow: MLflowConfig
     sources: list[DataSourceConfig]
     training: TrainingConfig
     model: ModelConfig

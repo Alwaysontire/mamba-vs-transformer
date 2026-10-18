@@ -6,7 +6,9 @@ server:
   mlflow_registry_uri: null
   credentials: null
 
-tracking: 
+tracking:
+  disable_tracking:
+    pipelines: [data_processing, compare]
   experiment: 
     name: mamba-vs-transformer
   run:

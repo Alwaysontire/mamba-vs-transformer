@@ -22,6 +22,7 @@ def evaluate_node(
         split (dict): Параметры сплита; используется ключ ``split_col``.
 
     Returns:
-        dict: Метрики из ``UNIFIED_METRICS`` (token/word-level perplexity).
+        dict: ``final_metrics`` в формате :class:`src.reporting.inputs.EvaluationMetrics`
+            (обязательно только ``token_level_perplexity``).
     """
     raise NotImplementedError

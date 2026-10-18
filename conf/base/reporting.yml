@@ -1,0 +1,6 @@
+# HTML-отчёты (params:reporting)
+
+reporting:
+  run_name: ${globals:run_name}     # подпись запуска в отчёте по env
+  runs_dir: ${globals:runs_dir}     # откуда compare собирает запуски
+  plotly: cdn                       # cdn — лёгкий файл; inline — открывается офлайн (~4.5 МБ)

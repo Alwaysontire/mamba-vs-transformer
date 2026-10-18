@@ -1,5 +1,5 @@
 # Дата каталоги хранения + пути
-#
+
 # Артефакты обучения: ${runs_dir}/${run_name}/{artifact,metrics}
 
 
@@ -33,3 +33,7 @@ evaluation_report:
   dataset:
     type: text.TextDataset
     filepath: ${globals:runs_dir}/${globals:run_name}/metrics/report_index.html
+
+comparison_report:
+  type: text.TextDataset
+  filepath: runs/compare/report.html

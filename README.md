@@ -40,7 +40,7 @@ flowchart LR
     end
     subgraph evaluation
         evaluate
-        build_validation_report
+        build_report
     end
 ```
 
