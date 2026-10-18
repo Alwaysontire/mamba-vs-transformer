@@ -8,10 +8,10 @@ server:
 
 tracking: 
   experiment: 
-    name: dl_project
+    name: mamba-vs-transformer
   run:
     id: ${runenv:RUN_ID, null}
-    name: ${runenv:RUN_NAME, test_training} 
+    name: ${globals:run_name}
     nested: false
   params: 
     dict_params: 

@@ -187,6 +187,26 @@ wheels = [
 ]
 
 [[package]]
+name = "causal-conv1d"
+version = "1.5.3.post1"
+source = { url = "https://github.com/Dao-AILab/causal-conv1d/releases/download/v1.5.3.post1/causal_conv1d-1.5.3.post1+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl" }
+dependencies = [
+    { name = "ninja" },
+    { name = "packaging" },
+    { name = "torch" },
+]
+wheels = [
+    { url = "https://github.com/Dao-AILab/causal-conv1d/releases/download/v1.5.3.post1/causal_conv1d-1.5.3.post1+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl", hash = "sha256:0fbec3a2226cd46f790ed7ee4ca4ac25630d39a04f5b3503036e46878e78f18b" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ninja" },
+    { name = "packaging" },
+    { name = "torch" },
+]
+
+[[package]]
 name = "certifi"
 version = "2026.7.22"
 source = { registry = "https://pypi.org/simple" }
@@ -490,6 +510,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/71/e4/723ba469856bb493c948985e5bd562c8a65f2b93e70c896e9764ab76de00/dynaconf-3.3.5.tar.gz", hash = "sha256:a08f6ab44025034ef3c9f86b32548ab01efd4039094a74bd9f028a43c63d016f", size = 333426, upload-time = "2026-08-05T19:50:25.16Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/95/41/b38501c34c40c3261868a2af8ed5fffe3e6d889c680638708de27eb57788/dynaconf-3.3.5-py3-none-any.whl", hash = "sha256:b3b4a753d5c866fc85466b65fc58d4954f6ed7dc8aa67f2b15bcbfd85d184687", size = 271426, upload-time = "2026-08-05T19:50:23.802Z" },
+]
+
+[[package]]
+name = "einops"
+version = "0.8.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/2c/77/850bef8d72ffb9219f0b1aac23fbc1bf7d038ee6ea666f331fa273031aa2/einops-0.8.2.tar.gz", hash = "sha256:609da665570e5e265e27283aab09e7f279ade90c4f01bcfca111f3d3e13f2827", size = 56261, upload-time = "2026-01-26T04:13:17.638Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2a/09/f8d8f8f31e4483c10a906437b4ce31bdf3d6d417b73fe33f1a8b59e34228/einops-0.8.2-py3-none-any.whl", hash = "sha256:54058201ac7087911181bfec4af6091bb59380360f069276601256a76af08193", size = 65638, upload-time = "2026-01-26T04:13:18.546Z" },
 ]
 
 [[package]]
@@ -1191,14 +1220,48 @@ wheels = [
 ]
 
 [[package]]
+name = "mamba-ssm"
+version = "2.2.6.post3"
+source = { url = "https://github.com/state-spaces/mamba/releases/download/v2.2.6.post3/mamba_ssm-2.2.6.post3+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl" }
+dependencies = [
+    { name = "einops" },
+    { name = "ninja" },
+    { name = "packaging" },
+    { name = "setuptools" },
+    { name = "torch" },
+    { name = "transformers" },
+    { name = "triton" },
+]
+wheels = [
+    { url = "https://github.com/state-spaces/mamba/releases/download/v2.2.6.post3/mamba_ssm-2.2.6.post3+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl", hash = "sha256:a010dfdaaf0eb49ae1337926fe55cf3320c4aacdd3b129cf506b537602ab1ff6" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "causal-conv1d", marker = "extra == 'causal-conv1d'", specifier = ">=1.2.0" },
+    { name = "einops" },
+    { name = "ninja" },
+    { name = "packaging" },
+    { name = "pytest", marker = "extra == 'dev'" },
+    { name = "setuptools", specifier = ">=61.0.0" },
+    { name = "torch" },
+    { name = "transformers" },
+    { name = "triton" },
+]
+provides-extras = ["causal-conv1d", "dev"]
+
+[[package]]
 name = "mamba-vs-transformer"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "causal-conv1d", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "einops" },
     { name = "kedro", version = "0.19.12", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'win32'" },
     { name = "kedro", version = "0.19.15", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'win32'" },
     { name = "kedro-datasets", extra = ["pandas"] },
     { name = "kedro-mlflow" },
+    { name = "mamba-ssm", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
     { name = "mlflow" },
     { name = "numpy" },
     { name = "omegaconf" },
@@ -1214,9 +1277,12 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "causal-conv1d", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'", url = "https://github.com/Dao-AILab/causal-conv1d/releases/download/v1.5.3.post1/causal_conv1d-1.5.3.post1+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl" },
+    { name = "einops" },
     { name = "kedro", specifier = ">=0.19,<0.20" },
     { name = "kedro-datasets", extras = ["pandas"] },
     { name = "kedro-mlflow", specifier = ">=0.13,<0.14" },
+    { name = "mamba-ssm", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'", url = "https://github.com/state-spaces/mamba/releases/download/v2.2.6.post3/mamba_ssm-2.2.6.post3+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl" },
     { name = "mlflow" },
     { name = "numpy" },
     { name = "omegaconf", specifier = ">=2.3" },
@@ -1226,7 +1292,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.5" },
     { name = "python-dotenv" },
     { name = "scikit-learn", specifier = ">=1.3" },
-    { name = "torch", specifier = ">=2.1,<2.7" },
+    { name = "torch", specifier = ">=2.6,<2.7" },
     { name = "transformers", specifier = "==5.15.1" },
 ]
 
@@ -1438,6 +1504,16 @@ wheels = [
 ]
 
 [[package]]
+name = "ninja"
+version = "1.13.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ac/92/410b7917d16ab54c04b05cc32b9284803671d91cf79d33be6009c28d4ea8/ninja-1.13.2.tar.gz", hash = "sha256:525bfa3fc88aa30a4467df270fd5be6f9fcae8061d54d4df74ea1dc5abd5a975", size = 243739, upload-time = "2026-08-30T15:49:51.897Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6e/53/ebfed7b689c338dd8ebeec9c0730c8d56821292f14e2536e5f3ef1a05744/ninja-1.13.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:65a24341b5ac09fcadcc37082660be40a94174e51a937fabf6e2cae26225fa2c", size = 183365, upload-time = "2026-08-30T15:49:34.53Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/5f/c511f2952f94ab2966d60edd9c34e744ea32f2724b1184b62270bde55b3a/ninja-1.13.2-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:915bd482c4be41c75120fd67a22e0bb3f0fbb3bbc5f95b89787deadd59e27ef2", size = 544460, upload-time = "2026-08-30T15:49:46.29Z" },
+]
+
+[[package]]
 name = "numexpr"
 version = "2.14.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1525,9 +1601,6 @@ wheels = [
 name = "nvidia-cufft-cu12"
 version = "11.2.1.3"
 source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "nvidia-nvjitlink-cu12" },
-]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/27/94/3266821f65b92b3138631e9c8e7fe1fb513804ac934485a8d05776e1dd43/nvidia_cufft_cu12-11.2.1.3-py3-none-manylinux2014_x86_64.whl", hash = "sha256:f083fc24912aa410be21fa16d157fed2055dab1cc4b6934a0e03cba69eb242b9", size = 211459117, upload-time = "2024-04-03T20:57:40.402Z" },
 ]

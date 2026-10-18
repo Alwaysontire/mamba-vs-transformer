@@ -1,0 +1,18 @@
+# Env transformer: uv run kedro run --env transformer
+#
+# ~30.2M параметров без эмбеддингов 
+
+model:
+  arch: transformer
+  vocab_size: 50257        # GPT-2 токенизатор
+  d_model: 512
+  n_layers: 10
+  max_length: 1024
+  dropout: 0.0
+  tie_embeddings: true
+  n_heads: 8
+  d_ff: 1280
+  pos_encoding: rope
+  norm: rmsnorm
+  activation: swiglu
+  attn_implementation: sdpa

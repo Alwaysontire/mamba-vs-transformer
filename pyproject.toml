@@ -17,9 +17,18 @@ dependencies = [
     "kedro-datasets[pandas]",
     "kedro-mlflow>=0.13,<0.14",
     "transformers==5.15.1",
-    "torch>=2.1,<2.7",
-
+    # torch зафиксирован на 2.6: под него собраны wheel'ы mamba-ssm/causal-conv1d ниже
+    "torch>=2.6,<2.7",
+    "einops",
+    # CUDA-ядра Mamba: только Linux x86_64 (сервер); на Mac не ставятся
+    "mamba-ssm==2.2.6.post3; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "causal-conv1d==1.5.3.post1; sys_platform == 'linux' and platform_machine == 'x86_64'",
 ]
+
+[tool.uv.sources]
+# Готовые wheel'ы из GitHub releases (cu12 + torch2.6 + cp310): без сборки и без nvcc на сервере
+mamba-ssm = { url = "https://github.com/state-spaces/mamba/releases/download/v2.2.6.post3/mamba_ssm-2.2.6.post3+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl" }
+causal-conv1d = { url = "https://github.com/Dao-AILab/causal-conv1d/releases/download/v1.5.3.post1/causal_conv1d-1.5.3.post1+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl" }
 
 [tool.kedro]
 package_name = "src"

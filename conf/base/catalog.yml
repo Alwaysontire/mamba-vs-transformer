@@ -1,4 +1,6 @@
 # Дата каталоги хранения + пути
+#
+# Артефакты обучения: ${runs_dir}/${run_name}/{artifact,metrics}
 
 
 dataset:
@@ -7,27 +9,27 @@ dataset:
 dataset_split:
   type: src.datasets.TextParquetDataset
   filepath: ${globals:processed_dir}/dataset_split.parquet
-train_artifact: 
+train_artifact:
   type: src.datasets.TrainArtifactBundleDataset
-  filepath: ${globals:train_dir}
+  filepath: ${globals:runs_dir}/${globals:run_name}/artifact
 
 manifest:
   type: kedro_mlflow.io.artifacts.MlflowArtifactDataset
   artifact_path: manifests
   dataset:
     type: json.JSONDataset
-    filepath: ${globals:metrics_dir}/manifest.json
+    filepath: ${globals:runs_dir}/${globals:run_name}/metrics/manifest.json
 
 final_metrics:
   type: kedro_mlflow.io.artifacts.MlflowArtifactDataset
   artifact_path: metrics
   dataset:
     type: json.JSONDataset
-    filepath: ${globals:metrics_dir}/final_metrics.json
+    filepath: ${globals:runs_dir}/${globals:run_name}/metrics/final_metrics.json
 
 evaluation_report:
   type: kedro_mlflow.io.artifacts.MlflowArtifactDataset
   artifact_path: report
   dataset:
     type: text.TextDataset
-    filepath: ${globals:metrics_dir}/report_index.html
+    filepath: ${globals:runs_dir}/${globals:run_name}/metrics/report_index.html
