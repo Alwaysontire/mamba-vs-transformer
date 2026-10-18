@@ -38,7 +38,7 @@ def train_node(
     """
     from src.training.run import build_train_manifest, train_core
     train_dir = paths.get("train_dir", "auto")
-    base = f"runs/train/{run["name"]}" if train_dir == "auto" else train_dir
+    base = f"runs/train/{run['name']}" if train_dir == "auto" else train_dir
     output_dir = Path(base) / "checkpoints"
 
     core = train_core(

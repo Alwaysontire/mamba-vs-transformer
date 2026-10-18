@@ -44,14 +44,23 @@ class MLflowConfig(_StrictModel):
 
 SplitName = Literal["train", "validation", "test"]
 
+def _default_split_patterns() -> dict[str, str]:
+    return {"train": "train*", "validation": "validation*", "test": "test*"}
+
+
 class DataSourceConfig(_StrictModel):
-    """Описание одного источника данных (parquet / csv)"""
+    """Описание одного источника данных: директория с файлами сплитов (parquet / csv)
+
+    ``splits`` — glob-шаблон относительно ``path`` для каждого сплита. Шаблон может
+    указывать как на файлы (``train-00000-of-00002.parquet``), так и на поддиректорию
+    (``train/``) — тогда берутся все файлы нужного формата внутри неё.
+    """
 
     name: str
     kind: Literal["parquet", "csv"]
-    split: SplitName
     path: str | None = None
-    columns: list[str] | None = None
+    splits: dict[SplitName, str] = Field(default_factory=_default_split_patterns)
+    column_map: dict[str, str] = Field(default_factory=lambda: {"text": "text"})
 
 class AugmentConfig(_StrictModel):
     """Настройка аугментации текстовых данных"""
@@ -141,7 +150,7 @@ class ExperimentConfig(_StrictModel):
     def _check_splits_covered(self) -> ExperimentConfig:
         """Проверить, что у каждого официального сплита есть хотя бы один источник"""
 
-        missing = set(get_args(SplitName)) -{source.split for source in self.sources}
+        missing = set(get_args(SplitName)) - {split for source in self.sources for split in source.splits}
         if missing:
             raise ValueError(f"Нет источников для сплитов: {sorted(missing)}")
         return self

@@ -1,0 +1,36 @@
+training: 
+  device: auto
+  objective:
+    loss: ce
+  optimizer:
+    name: adamw_torch_fused
+    lr: 2.0e-4
+    weight_decay: 1.0e-2
+  scheduler: 
+    name: cosine
+    warmup_ratio: 0.1
+  trainer: 
+    epochs: 3
+    batch_size: 8
+    eval_batch_size: 8
+    gradient_accumulation_steps: 8
+    max_grad_norm: 1.0
+
+    bf16: auto
+    fp16: false
+    eval_strategy: steps
+    eval_steps: 500
+    logging_strategy: steps
+    save_total_limit: 3
+    meatric_for_best_model: perplexity
+    greater_is_better: true
+    seed: 42
+    dataloader_num_workers: 8
+    early_stopping_enabled: true
+    early_stopping_patience: 3
+    
+
+
+
+
+    

@@ -1,0 +1,21 @@
+# Конфиг kedro-mlflow
+
+
+server: 
+  mlflow_tracking_uri: null
+  mlflow_registry_uri: null
+  credentials: null
+
+tracking: 
+  experiment: 
+    name: dl_project
+  run:
+    id: ${runenv:RUN_ID, null}
+    name: ${runenv:RUN_NAME, test_training} 
+    nested: false
+  params: 
+    dict_params: 
+      flatten: true
+      recursive: true
+      sep: "."
+    

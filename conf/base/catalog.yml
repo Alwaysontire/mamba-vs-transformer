@@ -1,0 +1,33 @@
+# Дата каталоги хранения + пути
+
+
+dataset:
+  type: src.datasets.TextParquetDataset
+  filepath: ${globals:processed_dir}/dataset.parquet
+dataset_split:
+  type: src.datasets.TextParquetDataset
+  filepath: ${globals:processed_dir}/dataset_split.parquet
+train_artifact: 
+  type: src.datasets.TrainArtifactBundleDataset
+  filepath: ${globals:train_dir}
+
+manifest:
+  type: kedro_mlflow.io.artifacts.MlflowArtifactDataset
+  artifact_path: manifests
+  dataset:
+    type: json.JSONDataset
+    filepath: ${globals:metrics_dir}/manifest.json
+
+final_metrics:
+  type: kedro_mlflow.io.artifacts.MlflowArtifactDataset
+  artifact_path: metrics
+  dataset:
+    type: json.JSONDataset
+    filepath: ${globals:metrics_dir}/final_metrics.json
+
+evaluation_report:
+  type: kedro_mlflow.io.artifacts.MlflowArtifactDataset
+  artifact_path: report
+  dataset:
+    type: text.TextDataset
+    filepath: ${globals:metrics_dir}/report_index.html

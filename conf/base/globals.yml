@@ -1,0 +1,9 @@
+# Глобальные значения
+
+run_name: ${runenv:RUN_NAME, test_training}
+owner: ${runenv:RUN_OWNER, local}
+
+processed_dir: data/processed_dir
+predictions_dir: runs/train/${run_name}/predictions
+metrics_dir: runs/train/${run_name}/metrics
+train_dir: runs/train/${run_name}/artifact

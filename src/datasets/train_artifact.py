@@ -32,11 +32,15 @@ class TrainArtifactBundleDataset(AbstractDataset):
 
     def load(self) -> Any:
         """Загружает артефакт в готовую к инференс модель"""
-        from str.training.model import load_model
+        from src.training.model import load_model
 
         return load_model(self._path)
 
     def _exists(self) -> bool:
         """Проверяет наличие сохраненного артфеакта по файлу"""
         return (self._path / "model.pt").is_file()
+
+    def _describe(self) -> dict[str, Any]:
+        """Описание датасета для логов kedro"""
+        return {"filepath": str(self._path)}
         

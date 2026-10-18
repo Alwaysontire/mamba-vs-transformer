@@ -1,0 +1,15 @@
+# Источники данных
+#
+# path   — директория, где лежат файлы сплитов
+# splits — glob-шаблон относительно path; файлы (train-*.parquet) или поддиректория (train/)
+
+data:
+  wikitext:
+    kind: parquet
+    path: null
+    splits:
+      train: "train*"
+      validation: "validation*"
+      test: "test*"
+    column_map:
+      text: text
