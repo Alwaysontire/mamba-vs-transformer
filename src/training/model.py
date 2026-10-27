@@ -12,6 +12,7 @@ import torch.nn as nn
 
 from src.config.schemas import LossConfig, ModelConfig, TransformerConfig, ObjectiveConfig
 from src.training.losses import compute_loss
+from src.training.layers import RMSnorm, TransformerBlock
 
 ARCHITECTURES: dict[str, type[nn.Module]] = {}
 
