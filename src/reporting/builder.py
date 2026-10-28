@@ -25,7 +25,7 @@ from src.reporting.section import (
 
 PlotlyMode = Literal["cdn", "inline"]
 
-PLOTLY_CDN = "https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.2/plotly.min.js"
+PLOTLY_CDN = "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"
 MAX_SLOTS = 8   
 
 _KNOWN_METRIC_KEYS = {
@@ -205,7 +205,7 @@ def build_report(
         runs: Запуски; цвет закреплён за позицией запуска, поэтому передавайте
             их в стабильном порядке (например, отсортированными по имени).
         title: Заголовок; по умолчанию — по именам запусков.
-        plotly: ``"cdn"`` — plotly.js с cdnjs (лёгкий файл, нужен интернет при
+        plotly: ``"cdn"`` — plotly.js с jsDelivr (лёгкий файл, нужен интернет при
             просмотре); ``"inline"`` — встроить (~4.5 МБ, открывается офлайн).
     """
     if not runs:
