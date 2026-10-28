@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 from typing import Any
+
+import mlflow
 from transformers import TrainerCallback
 
 
@@ -31,7 +33,8 @@ class MLflowMetricsCallback(TrainerCallback):
         """Инициализирует callback и отслеживание лучшей эпохи"""
 
 
-        self.enabled = mlflow_cfg.enabled
+        super().__init__()
+        self.enabled = mlflow.active_run() is not None
         self._greater_is_better = greater_is_better
         self._secondary = secondary_metrics
         self._best_value: float | None = None

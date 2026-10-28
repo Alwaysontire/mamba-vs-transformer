@@ -34,7 +34,7 @@ class Mamba(nn.Module):
     """Мамба модель для задачи LM"""
 
     def __init__(
-            self, model_cfg: ModelConfig, *, obkective: ObjectiveConfig
+            self, model_cfg: ModelConfig, *, objective: ObjectiveConfig
             ) -> None:
         super().__init__()
         pass

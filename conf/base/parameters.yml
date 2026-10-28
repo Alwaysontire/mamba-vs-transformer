@@ -1,0 +1,12 @@
+run:
+  name: ${globals:run_name}
+
+paths:
+  train_dir: auto
+
+split:
+  split_col: split
+
+tokenizer:
+  name: gpt2
+  batch_lines: 1000

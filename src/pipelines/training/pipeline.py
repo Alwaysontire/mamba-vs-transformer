@@ -1,4 +1,4 @@
-"""Training: dataset_split -> train_artifact"""
+"""Training: tokens_train + tokens_validation -> train_artifact"""
 
 
 from __future__ import annotations
@@ -14,10 +14,12 @@ def create_pipeline(**kwargs) -> Pipeline:
         node(
             train_node,
             inputs=[
-                "dataset_split",
+                "tokens_train",
+                "tokens_validation",
+                "tokenization_stats",
                 "params:model",
                 "params:training",
-                "params:split",
+                "params:tokenizer",
                 "params:run",
                 "params:paths",
             ],

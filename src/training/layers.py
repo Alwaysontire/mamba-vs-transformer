@@ -1,6 +1,5 @@
 """Реестр кастомных слоев для сборки модели"""
 
-import math
 
 from __future__ import annotations
 from collections.abc import Callable
@@ -8,6 +7,7 @@ from typing import Literal
 
 import torch 
 import torch.nn as nn
+import math
 from torch.nn import functional as F
 
 from src.config.schemas import ModelConfig, MambaBlockConfig, TransformerBlockConfig

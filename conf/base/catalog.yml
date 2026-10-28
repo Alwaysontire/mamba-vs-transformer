@@ -9,6 +9,19 @@ dataset:
 dataset_split:
   type: src.datasets.TextParquetDataset
   filepath: ${globals:processed_dir}/dataset_split.parquet
+tokens_train:
+  type: src.datasets.TokensDataset
+  filepath: ${globals:processed_dir}/tokens_train.npy
+tokens_validation:
+  type: src.datasets.TokensDataset
+  filepath: ${globals:processed_dir}/tokens_validation.npy
+tokens_test:
+  type: src.datasets.TokensDataset
+  filepath: ${globals:processed_dir}/tokens_test.npy
+tokenization_stats:
+  type: json.JSONDataset
+  filepath: ${globals:processed_dir}/tokenization_stats.json
+
 train_artifact:
   type: src.datasets.TrainArtifactBundleDataset
   filepath: ${globals:runs_dir}/${globals:run_name}/artifact

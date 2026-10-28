@@ -3,23 +3,24 @@
 
 from __future__ import annotations
 
-import pandas as pd
+import numpy as np
 
 from src.datasets.train_artifact import TrainArtifact
 
 
 def evaluate_node(
         train_artifact: TrainArtifact,
-        dataset_split: pd.DataFrame,
+        tokens_test: np.ndarray,
+        tokenization_stats: dict,
         training: dict,
-        split: dict,
 ) -> dict:
     """
     Args:
         train_artifact (TrainArtifact): Обученная модель и manifest.
-        dataset_split (pd.DataFrame): Датасет с колонкой сплита (train/val/test).
+        tokens_test (np.ndarray): 1D поток токенов test (memmap).
+        tokenization_stats (dict): ``splits.test.{n_tokens, n_words, n_bytes}`` —
+            знаменатели для word PPL и bits per byte.
         training (dict): Параметры обучения (batch size, max_length и т.п.).
-        split (dict): Параметры сплита; используется ключ ``split_col``.
 
     Returns:
         dict: ``final_metrics`` в формате :class:`src.reporting.inputs.EvaluationMetrics`

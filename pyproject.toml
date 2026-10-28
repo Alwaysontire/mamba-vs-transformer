@@ -1,7 +1,7 @@
 [project]
 name = "mamba-vs-transformer"
 version = "0.1.0"
-requires-python = ">=3.10,<3.11"
+requires-python = ">=3.12,<3.13"
 
 dependencies = [
     "pydantic>=2.5",
@@ -25,10 +25,13 @@ dependencies = [
     "causal-conv1d==1.5.3.post1; sys_platform == 'linux' and platform_machine == 'x86_64'",
 ]
 
+[tool.uv]
+constraint-dependencies = ["scipy>=1.16"]
+
 [tool.uv.sources]
-# Готовые wheel'ы из GitHub releases (cu12 + torch2.6 + cp310): без сборки и без nvcc на сервере
-mamba-ssm = { url = "https://github.com/state-spaces/mamba/releases/download/v2.2.6.post3/mamba_ssm-2.2.6.post3+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl" }
-causal-conv1d = { url = "https://github.com/Dao-AILab/causal-conv1d/releases/download/v1.5.3.post1/causal_conv1d-1.5.3.post1+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl" }
+# Готовые wheel'ы из GitHub releases (cu12 + torch2.6 + cp312): без сборки и без nvcc на сервере
+mamba-ssm = { url = "https://github.com/state-spaces/mamba/releases/download/v2.2.6.post3/mamba_ssm-2.2.6.post3+cu12torch2.6cxx11abiFALSE-cp312-cp312-linux_x86_64.whl" }
+causal-conv1d = { url = "https://github.com/Dao-AILab/causal-conv1d/releases/download/v1.5.3.post1/causal_conv1d-1.5.3.post1+cu12torch2.6cxx11abiFALSE-cp312-cp312-linux_x86_64.whl" }
 
 [tool.kedro]
 package_name = "src"

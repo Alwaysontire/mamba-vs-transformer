@@ -1,0 +1,38 @@
+# Env smoke: uv run kedro run --env smoke
+#
+# Крошечный трансформер на CPU/MPS: проверить путь data -> train -> artifact -> report без GPU
+
+model:
+  arch: transformer
+  vocab_size: 50257
+  d_model: 64
+  n_layers: 2
+  max_length: 128
+  dropout: 0.0
+  tie_embeddings: true
+  pos_encoding: rope
+  block:
+    n_heads: 4
+    d_ff: 128
+    norm: rmsnorm
+    activation: swiglu
+    attn_implementation: sdpa
+
+training:
+  optimizer:
+    name: adamw_torch
+    lr: 1.0e-3
+  scheduler:
+    warmup_ratio: 0.0
+  trainer:
+    max_steps: 20
+    batch_size: 4
+    eval_batch_size: 4
+    gradient_accumulation_steps: 1
+    bf16: false
+    eval_steps: 10
+    logging_steps: 5
+    save_steps: 10
+    save_total_limit: 1
+    dataloader_num_workers: 0
+    early_stopping_enabled: false

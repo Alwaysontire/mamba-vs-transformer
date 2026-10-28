@@ -145,17 +145,59 @@ class MambaConfig(_LMBase):
 ModelConfig = Annotated[TransformerConfig | MambaConfig, Field(discriminator="arch")]
 
 
+class ObjectiveConfig(_StrictModel):
+    """Цель обучения"""
+
+    loss: LossConfig = Field(default_factory=LossConfig)
+
+
+class OptimizerConfig(_StrictModel):
+    name: str = Field("adamw_torch_fused", description="TrainingArguments.optim")
+    lr: float
+    weight_decay: float = 0.01
+    adam_beta1: float = 0.9
+    adam_beta2: float = 0.95
+
+
+class SchedulerConfig(_StrictModel):
+    name: Literal["cosine", "linear", "constant", "constant_with_warmup"] = "cosine"
+    warmup_ratio: float = 0.0
+
+
+class TrainerConfig(_StrictModel):
+    """Параметры цикла обучения (маппятся в TrainingArguments)"""
+
+    epochs: float = 1.0
+    max_steps: int = Field(-1, description="> 0 перекрывает epochs")
+    batch_size: int
+    eval_batch_size: int | None = None
+    gradient_accumulation_steps: int = 1
+    max_grad_norm: float = 1.0
+    bf16: bool | Literal["auto"] = "auto"
+    fp16: bool = False
+    eval_strategy: Literal["no", "steps", "epoch"] = "steps"
+    eval_steps: int = 500
+    logging_strategy: Literal["no", "steps", "epoch"] = "steps"
+    logging_steps: int = 50
+    save_strategy: Literal["no", "steps", "epoch", "best"] = "steps"
+    save_steps: int = 500
+    save_total_limit: int | None = 3
+    metric_for_best_model: str = "eval_loss"
+    greater_is_better: bool = False
+    seed: int = 42
+    dataloader_num_workers: int = 0
+    early_stopping_enabled: bool = False
+    early_stopping_patience: int = 3
+
+
 class TrainingConfig(_StrictModel):
     """Общие параметры для обеих архитектур"""
 
-    batch_size: int
-    lr: float
-    weight_decay: float = 0.1
-    warmup_steps: int = 0
-    max_steps: int 
-    grad_clip: float = 1.0
-    precision: Literal["fp32", "bf16", "fp16"] = "bf16"
-    seed: int = 42
+    device: Literal["auto", "cpu", "cuda", "mps"] = "auto"
+    objective: ObjectiveConfig = Field(default_factory=ObjectiveConfig)
+    optimizer: OptimizerConfig
+    scheduler: SchedulerConfig = Field(default_factory=SchedulerConfig)
+    trainer: TrainerConfig
 
 class ExperimentConfig(_StrictModel):
     """Корневой конфиг одного запуска"""

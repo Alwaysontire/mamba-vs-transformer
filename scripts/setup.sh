@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Per-project setup. Запускается ОДИН раз после git clone (Mac / Linux).
 #
-#   uv (если нет) -> Python 3.10 -> uv sync из uv.lock -> conf/local -> проверка kedro
+#   uv (если нет) -> Python 3.12 -> uv sync из uv.lock -> conf/local -> проверка kedro
 #
 # Дальше day-to-day: `uv run kedro run --pipeline=...`
 set -euo pipefail
@@ -25,8 +25,8 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 echo "[setup] uv: $(uv --version)"
 
-# 2. Python 3.10 через uv (без sudo); версия зафиксирована в .python-version.
-uv python find 3.10 >/dev/null 2>&1 || uv python install 3.10
+# 2. Python 3.12 через uv (без sudo); версия зафиксирована в .python-version.
+uv python find 3.12 >/dev/null 2>&1 || uv python install 3.12
 
 # 3. Зависимости из uv.lock. --frozen: lock не переписывается, ставится ровно то, что закоммичено.
 echo "[setup] uv sync..."
