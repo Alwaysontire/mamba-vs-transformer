@@ -3,6 +3,7 @@
 
 
 from __future__ import annotations
+import math
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -50,7 +51,7 @@ class Transformer(nn.Module):
 
     def __init__(self, config: TransformerConfig):
         super().__init__()
-        self.config = config
+        self.model_cfg = config
         self.max_length = config.max_length
 
         self.token_emb = nn.Embedding(config.vocab_size, config.d_model)
@@ -85,6 +86,8 @@ class Transformer(nn.Module):
         if config.tie_embeddings:
             self.linear.weight = self.token_emb.weight
 
+        init_lm_weights(self, config.n_layers)
+
     def forward(self, input_ids: torch.Tensor) -> torch.Tensor:
         """
         Получает [batch, sequence]
@@ -97,7 +100,7 @@ class Transformer(nn.Module):
             )
 
         x = self.token_emb(input_ids)
-        if self.config.pos_encoding == "learned":
+        if self.model_cfg.pos_encoding == "learned":
             positions = torch.arange(sequence_length, device=input_ids.device)
             x = x + self.positional_emb(positions).unsqueeze(0)
 
@@ -109,3 +112,41 @@ class Transformer(nn.Module):
         logits = self.linear(x)
 
         return logits
+
+
+def init_lm_weights(model: nn.Module, n_layers: int, std: float = 0.02) -> None:
+    """GPT-2: N(0, std) для Linear/Embedding, нулевые bias, ``output_projection`` — std / sqrt(2 * n_layers)"""
+    for module in model.modules():
+        if isinstance(module, (nn.Linear, nn.Embedding)):
+            nn.init.normal_(module.weight, mean=0.0, std=std)
+        if isinstance(module, nn.Linear) and module.bias is not None:
+            nn.init.zeros_(module.bias)
+    for name, param in model.named_parameters():
+        if name.endswith("output_projection.weight"):
+            nn.init.normal_(param, mean=0.0, std=std / math.sqrt(2 * n_layers))
+
+
+def build_model(model_cfg: ModelConfig) -> nn.Module:
+    """Модель по ``model_cfg.arch`` из реестра"""
+    if model_cfg.arch not in ARCHITECTURES:
+        raise KeyError(f"Неизвестная архитектура {model_cfg.arch!r}, есть: {sorted(ARCHITECTURES)}")
+    return ARCHITECTURES[model_cfg.arch](model_cfg)
+
+
+def save_model(model: nn.Module, path: Path) -> None:
+    """``config.json`` + ``model.pt`` (state_dict)"""
+    from src.common.io import write_json
+
+    write_json(Path(path) / "config.json", model.model_cfg.model_dump(mode="json"))
+    torch.save(model.state_dict(), Path(path) / "model.pt")
+
+
+def load_model(path: Path) -> nn.Module:
+    """Обратная к :func:`save_model`: модель в режиме eval"""
+    from pydantic import TypeAdapter
+    from src.common.io import read_json
+
+    model_cfg = TypeAdapter(ModelConfig).validate_python(read_json(Path(path) / "config.json"))
+    model = build_model(model_cfg)
+    model.load_state_dict(torch.load(Path(path) / "model.pt", map_location="cpu", weights_only=True))
+    return model.eval()

@@ -23,6 +23,7 @@ dependencies = [
     # CUDA-ядра Mamba: только Linux x86_64 (сервер); на Mac не ставятся
     "mamba-ssm==2.2.6.post3; sys_platform == 'linux' and platform_machine == 'x86_64'",
     "causal-conv1d==1.5.3.post1; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "accelerate>=1.1.0",
 ]
 
 [tool.uv]

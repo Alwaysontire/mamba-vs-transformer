@@ -30,11 +30,12 @@ class TrainArtifactBundleDataset(AbstractDataset):
         save_model(data.model, self._path)
         write_json(self._path / "manifest.json", data.manifest)
 
-    def load(self) -> Any:
+    def load(self) -> TrainArtifact:
         """Загружает артефакт в готовую к инференс модель"""
         from src.training.model import load_model
+        from src.common.io import read_json
 
-        return load_model(self._path)
+        return TrainArtifact(model=load_model(self._path), manifest=read_json(self._path / "manifest.json"))
 
     def _exists(self) -> bool:
         """Проверяет наличие сохраненного артфеакта по файлу"""

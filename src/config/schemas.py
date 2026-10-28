@@ -199,6 +199,13 @@ class TrainingConfig(_StrictModel):
     scheduler: SchedulerConfig = Field(default_factory=SchedulerConfig)
     trainer: TrainerConfig
 
+class EvaluationConfig(_StrictModel):
+    """Оценка скользящим окном по потоку test"""
+
+    context_length: int | None = Field(None, description="Длина окна; None -> max_length модели")
+    stride: int | None = Field(None, description="Шаг окна; None -> context_length // 2")
+    batch_size: int = 8
+
 class ExperimentConfig(_StrictModel):
     """Корневой конфиг одного запуска"""
 

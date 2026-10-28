@@ -1,43 +1,36 @@
 """HF Trainer callback"""
 
 from __future__ import annotations
-from typing import Any
+import math
 
 import mlflow
 from transformers import TrainerCallback
 
 
-
 _TRAIN_METRIC_KEYS = {
     "loss": "train/loss",
-    "grad_norm": "train/grad_norm"
+    "grad_norm": "train/grad_norm",
+    "learning_rate": "train/learning_rate",
 }
 
-_DEFAULT_BEST_METRIC = "perplexity"
-_DEFAULT_SECONDARY_METRICS = (
-    "loss",
-    "byte_level_perplexity"
-)
-
+_EVAL_METRIC_KEYS = {
+    "eval_loss": "eval/loss",
+}
 
 
 class MLflowMetricsCallback(TrainerCallback):
-    """Логгирует train/* и eval/* по шагу в MLflow"""
+    """Логгирует train/* и eval/* по шагу в активный run MLflow (его открывает kedro-mlflow)"""
 
-    def __init__(
-            self, 
-            best_metric: str = _DEFAULT_BEST_METRIC,
-            greater_is_better: bool = True,
-            secondary_metrics: tuple[str, ...] = _DEFAULT_SECONDARY_METRICS
-    ) -> None:
-        """Инициализирует callback и отслеживание лучшей эпохи"""
+    def on_log(self, args, state, control, logs=None, **kwargs) -> None:
+        if not logs or not state.is_world_process_zero or mlflow.active_run() is None:
+            return
 
-
-        super().__init__()
-        self.enabled = mlflow.active_run() is not None
-        self._greater_is_better = greater_is_better
-        self._secondary = secondary_metrics
-        self._best_value: float | None = None
-        self._best_snapshot: dict[str, float] = {}
-        self._best_epoch: float | None = None
-        self._best_step: int | None = None
+        metrics = {
+            name: float(logs[key])
+            for key, name in {**_TRAIN_METRIC_KEYS, **_EVAL_METRIC_KEYS}.items()
+            if isinstance(logs.get(key), (int, float))
+        }
+        if "eval/loss" in metrics:
+            metrics["eval/perplexity"] = math.exp(metrics["eval/loss"])
+        if metrics:
+            mlflow.log_metrics(metrics, step=state.global_step)

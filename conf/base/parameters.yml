@@ -10,3 +10,8 @@ split:
 tokenizer:
   name: gpt2
   batch_lines: 1000
+
+evaluation:
+  context_length: null
+  stride: null
+  batch_size: 8

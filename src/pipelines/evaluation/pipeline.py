@@ -23,6 +23,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                 "tokens_test",
                 "tokenization_stats",
                 "params:training",
+                "params:evaluation",
             ],
             outputs="final_metrics",
             name="evaluate",

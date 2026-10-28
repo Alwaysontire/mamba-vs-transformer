@@ -36,3 +36,8 @@ training:
     save_total_limit: 1
     dataloader_num_workers: 0
     early_stopping_enabled: false
+
+evaluation:
+  context_length: null
+  stride: null
+  batch_size: 4
