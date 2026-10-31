@@ -36,8 +36,8 @@ else
     uv sync
 fi
 
-# 3b. Linux (сервер): CUDA-ядра Mamba ставятся готовыми wheel'ами (cu12 + torch2.6, x86_64).
-#     Нужен только драйвер NVIDIA с поддержкой CUDA 12; nvcc/toolkit не нужен.
+# 3b. Linux (сервер): CUDA-ядра Mamba ставятся готовыми wheel'ами (cu12 + torch2.7, x86_64).
+#     Нужен драйвер NVIDIA >= 570 (CUDA 12.8); nvcc/toolkit не нужен.
 if [ "$(uname -s)" = "Linux" ]; then
     command -v nvidia-smi >/dev/null 2>&1 \
         || echo "[setup] WARN: nvidia-smi не найден — mamba-ssm без GPU работать не будет" >&2

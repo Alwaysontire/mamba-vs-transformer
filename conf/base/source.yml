@@ -6,7 +6,7 @@
 data:
   wikitext:
     kind: parquet
-    path: null
+    path: data/raw/wikitext/wikitext-103-raw-v1
     splits:
       train: "train*"
       validation: "validation*"

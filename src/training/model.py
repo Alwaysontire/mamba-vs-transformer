@@ -11,9 +11,9 @@ from typing import Any
 import torch 
 import torch.nn as nn
 
-from src.config.schemas import LossConfig, ModelConfig, TransformerConfig, ObjectiveConfig
+from src.config.schemas import LossConfig, ModelConfig, TransformerConfig, ObjectiveConfig, MambaConfig
 from src.training.losses import compute_loss
-from src.training.layers import RMSnorm, TransformerBlock
+from src.training.layers import RMSnorm, TransformerBlock, MambaBlock
 
 ARCHITECTURES: dict[str, type[nn.Module]] = {}
 
@@ -35,12 +35,33 @@ class Mamba(nn.Module):
     """Мамба модель для задачи LM"""
 
     def __init__(
-            self, model_cfg: ModelConfig, *, objective: ObjectiveConfig
+            self, config: ModelConfig
             ) -> None:
         super().__init__()
-        pass
-    def forward(self):
-        pass
+        self.model_cfg = config
+        self.max_length = config.max_length
+
+        self.token_emb = nn.Embedding(config.vocab_size, config.d_model)
+        self.emb_dropout = nn.Dropout(config.dropout)
+
+        self.blocks = nn.ModuleList([
+            MambaBlock(config.block, config.d_model)
+         for _ in range(config.n_layers)])
+
+        self.final_norm = RMSnorm(config.d_model)
+
+        self.linear = nn.Linear(config.d_model, config.vocab_size, bias=False)
+        if config.tie_embeddings:
+            self.linear.weight = self.token_emb.weight
+
+        init_lm_weights(self, config.n_layers)
+        
+    def forward(self, input_ids: torch.Tensor) -> torch.Tensor:
+        x = self.emb_dropout(self.token_emb(input_ids))
+
+        for block in self.blocks:
+            x = block(x)
+        return self.linear(self.final_norm(x))
 
 
 

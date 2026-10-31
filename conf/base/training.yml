@@ -1,5 +1,5 @@
 training:
-  device: auto
+  device: mps
   objective:
     loss:
       type: ce
@@ -13,9 +13,9 @@ training:
     warmup_ratio: 0.1
   trainer:
     epochs: 3
-    batch_size: 8
-    eval_batch_size: 8
-    gradient_accumulation_steps: 8
+    batch_size: 1
+    eval_batch_size: 1
+    gradient_accumulation_steps: 64
     max_grad_norm: 1.0
 
     bf16: auto

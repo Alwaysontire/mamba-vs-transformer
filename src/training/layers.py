@@ -31,10 +31,134 @@ def register_layer(name: str) -> Callable[[type[nn.Module]], type[nn.Module]]:
 @register_layer("mamba_block")
 class MambaBlock(nn.Module):
     """Мамба блок"""
-    def __init__(self, config: MambaBlockConfig):
-        pass
-    def forward(self):
-        pass
+    def __init__(self, 
+                config: MambaBlockConfig,
+                d_model: int,
+            ) -> None:
+        super().__init__()
+
+        self.mixer = MixerBlock(
+            d_model=d_model,
+            d_state=config.d_state, 
+            d_conv=config.d_conv,
+            expand=config.expand,
+            headdim=config.headdim,
+            ngroups=config.ngroups,
+            dt_min=config.dt_min,
+            dt_max=config.dt_max,
+            chunk_size=config.chunk_size,
+            conv_bias=config.conv_bias,
+            bias=config.bias,
+        )
+        self.norm = RMSnorm(d_model)
+
+    def forward(self, x) -> torch.Tensor:
+        return x + self.mixer(self.norm(x))
+
+
+@register_layer("mixer")
+class MixerBlock(nn.Module):
+    """Mixer блок для mamba"""
+    def __init__(self, 
+                d_model: int,
+                d_state: int,
+                d_conv: int,
+                expand: int,
+                headdim: int, 
+                ngroups: int,
+                dt_min: float = 0.001,
+                dt_max: float = 0.1,
+                chunk_size: int = 256,
+                conv_bias: bool = True,
+                bias: bool = False,
+                ):
+        super().__init__()
+        self.d_state = d_state
+        self.chunk_size = chunk_size
+        self.ngroups = ngroups
+        self.headdim = headdim
+        self.d_inner = expand * d_model
+        self.nheads = self.d_inner // headdim
+        self.conv_dim = self.d_inner + 2 * ngroups * d_state
+
+        dt = torch.exp(torch.rand(self.nheads) * (math.log(dt_max) - math.log(dt_min)) + math.log(dt_min))
+        dt = dt.clamp(min=1e-4)
+        self.A_log = nn.Parameter(torch.log(torch.empty(self.nheads).uniform_(1, 16)))
+        self.dt_bias = nn.Parameter(dt + torch.log(-torch.expm1(-dt)))
+        self.D = nn.Parameter(torch.ones(self.nheads))
+        
+        self.in_proj = nn.Linear(d_model, self.d_inner + self.conv_dim + self.nheads, bias=bias)
+        self.conv1d = nn.Conv1d(self.conv_dim, self.conv_dim, kernel_size=d_conv, groups=self.conv_dim, padding=d_conv - 1, bias=conv_bias)
+
+        self.output_projection = nn.Linear(self.d_inner, d_model, bias=bias)
+        self.norm = RMSnorm(self.d_inner)
+
+        
+    def forward(self, u: torch.Tensor) -> torch.Tensor:
+        b, L, _ = u.shape
+        z, xBC, dt = torch.split(self.in_proj(u), [self.d_inner, self.conv_dim, self.nheads], dim=-1)
+
+        xBC = F.silu(self.conv1d(xBC.transpose(1, 2))[..., :L].transpose(1, 2))
+        x, B, C = torch.split(xBC, [self.d_inner, self.ngroups * self.d_state, self.ngroups * self.d_state], dim=-1)
+
+        dt = F.softplus(dt + self.dt_bias)
+        A = -torch.exp(self.A_log)
+
+        x = x.view(b, L, self.nheads, self.headdim)
+        B = B.view(b, L, self.ngroups, self.d_state)
+        C = C.view(b, L, self.ngroups, self.d_state)
+
+        y = ssm(x, dt, A, B, C, self.D, self.chunk_size).reshape(b, L, self.d_inner)
+        y = self.norm(y * F.silu(z))
+                
+        return self.output_projection(y)
+
+
+def ssm(
+        x: torch.Tensor,
+        dt: torch.Tensor,
+        A: torch.Tensor,
+        B: torch.Tensor,
+        C: torch.Tensor,
+        D: torch.Tensor,
+        chunk_size: int,
+) -> torch.Tensor:
+    """ Ядро mamba для обучения на CUDA"""
+    if x.is_cuda:
+        from mamba_ssm.ops.triton.ssd_combined import mamba_chunk_scan_combined
+
+        return mamba_chunk_scan_combined(x, dt, A, B, C, chunk_size, D=D)
+
+    heads_per_group = x.shape[2] // B.shape[2]
+    B = B.repeat_interleave(heads_per_group, dim=2)
+    C = C.repeat_interleave(heads_per_group, dim=2)
+    return ssm_sequential(x, dt, A, B, C, D)
+
+
+def ssm_sequential(
+            x: torch.Tensor,
+            dt: torch.Tensor,
+            A: torch.Tensor,
+            B: torch.Tensor,
+            C: torch.Tensor,
+            D: torch.Tensor,
+    ) -> torch.Tensor:
+        b, L, H, P = x.shape
+        N = B.shape[-1]
+        h = x.new_zeros(b, H, P, N)
+        ys = []
+        for t in range(L):
+            dA = torch.exp(dt[:, t] * A)
+            h = dA[:, :, None, None] * h + (dt[:, t, :, None] * x[:, t])[..., None] * B[:, t, :, None, :]
+            y_t = torch.einsum("bhpn,bhn->bhp", h, C[:, t]) + D[:, None] * x[:, t]
+
+            ys.append(y_t)
+
+        return torch.stack(ys, dim=1)
+
+        
+        
+        
 
 
 @register_layer("rmsnorm")
