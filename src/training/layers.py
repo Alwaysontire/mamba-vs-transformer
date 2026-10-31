@@ -2,6 +2,7 @@
 
 
 from __future__ import annotations
+import functools
 from collections.abc import Callable
 from typing import Literal
 
@@ -114,6 +115,25 @@ class MixerBlock(nn.Module):
         return self.output_projection(y)
 
 
+@functools.cache
+def _ssd_kernel() -> Callable:
+    """``mamba_chunk_scan_combined`` из mamba_ssm 2.2.6
+
+    ``mamba_ssm/__init__`` тянет ``utils/generation.py``, который импортирует удалённые в
+    transformers v5 ``GreedySearchDecoderOnlyOutput`` / ``SampleDecoderOnlyOutput``;
+    в mamba_ssm 2.3 их заменили на ``GenerateDecoderOnlyOutput``, но wheel'ов под torch 2.7 нет
+    """
+    import transformers.generation as generation
+
+    for name in ("GreedySearchDecoderOnlyOutput", "SampleDecoderOnlyOutput"):
+        if not hasattr(generation, name):
+            setattr(generation, name, generation.GenerateDecoderOnlyOutput)
+
+    from mamba_ssm.ops.triton.ssd_combined import mamba_chunk_scan_combined
+
+    return mamba_chunk_scan_combined
+
+
 def ssm(
         x: torch.Tensor,
         dt: torch.Tensor,
@@ -125,9 +145,7 @@ def ssm(
 ) -> torch.Tensor:
     """ Ядро mamba для обучения на CUDA"""
     if x.is_cuda:
-        from mamba_ssm.ops.triton.ssd_combined import mamba_chunk_scan_combined
-
-        return mamba_chunk_scan_combined(x, dt, A, B, C, chunk_size, D=D)
+        return _ssd_kernel()(x, dt, A, B, C, chunk_size, D=D)
 
     heads_per_group = x.shape[2] // B.shape[2]
     B = B.repeat_interleave(heads_per_group, dim=2)
